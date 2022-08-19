@@ -24,7 +24,7 @@ class Customer {
     this._notes = val ? val : "";
   }
 
-  // ask what @ is, and ask what CASE statements are
+  // ask what @ is (it's for microsoft sql), and ask what CASE statements are (basically if statements)
   // error": {
   //   "message": "bind message supplies 1 parameters, but prepared statement \"\" requires 0",
   //   "status": 500
@@ -36,16 +36,8 @@ class Customer {
   static async all(name = "") {
     // term in parameter
 
-    let whereString;
-    let valsString;
-
-    if (name) {
-      whereString = "WHERE CONCAT(first_name, ' ', last_name) ILIKE $1";
-      valsString = `%${name}%`;
-    } else {
-      whereString = "WHERE 5=$1";
-      valsString = "5";
-    }
+    const  whereString = name ? "WHERE CONCAT(first_name, ' ', last_name) ILIKE $1": '';
+    const  queryParams = name ? [`%${name}%`]: [];
     // we were getting an error because if you have a variable, it has to be used in statement! ($1)
 
     const results = await db.query(
@@ -54,9 +46,10 @@ class Customer {
                   last_name  AS "lastName",
                   phone,
                   notes
-           FROM customers ${whereString}
+           FROM customers
+           ${whereString}
            ORDER BY last_name, first_name`,
-      [valsString]
+      queryParams
     );
     return results.rows.map((c) => new Customer(c));
   }
