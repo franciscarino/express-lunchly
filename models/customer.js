@@ -16,35 +16,77 @@ class Customer {
     this.notes = notes;
   }
 
+  // ask what @ is, and ask what CASE statements are
+  // error": {
+  //   "message": "bind message supplies 1 parameters, but prepared statement \"\" requires 0",
+  //   "status": 500
+  // }
+  // "message": "invalid input syntax for type integer: \"%0%\""
+
   /** find all customers. */
 
-  static async all() {
+  static async all(name = '') { // term in parameter
+    
+    let whereString;
+    let valsString;
+    
+    if(name) {
+      whereString = "WHERE CONCAT(first_name, ' ', last_name) ILIKE $1";
+      valsString = `%${name}%`;
+    }
+    else {
+      whereString = 'WHERE 5=$1';
+      valsString = '5';
+    }
+    // we were getting an error because if you have a variable, it has to be used in statement! ($1)
+    
     const results = await db.query(
       `SELECT id,
                   first_name AS "firstName",
                   last_name  AS "lastName",
                   phone,
                   notes
-           FROM customers
-           ORDER BY last_name, first_name`
+           FROM customers ${whereString}
+           ORDER BY last_name, first_name`, [valsString]
     );
     return results.rows.map((c) => new Customer(c));
   }
+  
+  // WHERE (name AND CONCAT(first_name, ' ', last_name) ILIKE $1)
+        // OR NOT name
 
   /** find customer by name search. */
-  static async search(name) {
+  // static async search(name) {
+  //   const results = await db.query(
+  //     `SELECT id,
+  //                 first_name AS "firstName",
+  //                 last_name  AS "lastName",
+  //                 phone,
+  //                 notes
+  //          FROM customers
+  //          WHERE CONCAT(first_name, ' ', last_name) ILIKE $1
+  //          ORDER BY last_name, first_name`,
+  //     [`%${name}%`] // this is the only way to do it
+  //   );
+  //   return results.rows.map((c) => new Customer(c));
+  // }
+  
+  /** get the top ten customers with most reservations */
+  static async topTen() {
     const results = await db.query(
-      `SELECT id,
-                  first_name AS "firstName",
-                  last_name  AS "lastName",
-                  phone,
-                  notes
-           FROM customers
-           WHERE CONCAT(first_name, ' ', last_name) ILIKE $1
-           ORDER BY last_name, first_name`,
-      [`%${name}%`]
-    );
-    return results.rows.map((c) => new Customer(c));
+      `SELECT c.id,
+                  c.first_name AS "firstName",
+                  c.last_name  AS "lastName",
+                  c.phone,
+                  c.notes
+            FROM customers c
+            JOIN reservations r
+            ON c.id = r.customer_id
+            GROUP BY c.id
+            ORDER BY COUNT(*) DESC
+            LIMIT 10`
+    )
+    return results.rows.map(c => new Customer(c));
   }
 
   /** get a customer by ID. */
@@ -104,7 +146,6 @@ class Customer {
 
   /**Gets first name and last name for full name. */
   fullName() {
-    debugger;
     return `${this.firstName} ${this.lastName}`;
   }
 }

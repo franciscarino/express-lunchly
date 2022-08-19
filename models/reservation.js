@@ -40,6 +40,7 @@ class Reservation {
     return results.rows.map((row) => new Reservation(row));
   }
 
+  /** Save this reservation */
   async save() {
     if (this.id === undefined) {
       const result = await db.query(
