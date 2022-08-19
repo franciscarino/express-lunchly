@@ -16,6 +16,14 @@ class Customer {
     this.notes = notes;
   }
 
+  get notes() {
+    return this._notes;
+  }
+
+  set notes(val) {
+    this._notes = val ? val : "";
+  }
+
   // ask what @ is, and ask what CASE statements are
   // error": {
   //   "message": "bind message supplies 1 parameters, but prepared statement \"\" requires 0",
@@ -25,21 +33,21 @@ class Customer {
 
   /** find all customers. */
 
-  static async all(name = '') { // term in parameter
-    
+  static async all(name = "") {
+    // term in parameter
+
     let whereString;
     let valsString;
-    
-    if(name) {
+
+    if (name) {
       whereString = "WHERE CONCAT(first_name, ' ', last_name) ILIKE $1";
       valsString = `%${name}%`;
-    }
-    else {
-      whereString = 'WHERE 5=$1';
-      valsString = '5';
+    } else {
+      whereString = "WHERE 5=$1";
+      valsString = "5";
     }
     // we were getting an error because if you have a variable, it has to be used in statement! ($1)
-    
+
     const results = await db.query(
       `SELECT id,
                   first_name AS "firstName",
@@ -47,13 +55,14 @@ class Customer {
                   phone,
                   notes
            FROM customers ${whereString}
-           ORDER BY last_name, first_name`, [valsString]
+           ORDER BY last_name, first_name`,
+      [valsString]
     );
     return results.rows.map((c) => new Customer(c));
   }
-  
+
   // WHERE (name AND CONCAT(first_name, ' ', last_name) ILIKE $1)
-        // OR NOT name
+  // OR NOT name
 
   /** find customer by name search. */
   // static async search(name) {
@@ -70,7 +79,7 @@ class Customer {
   //   );
   //   return results.rows.map((c) => new Customer(c));
   // }
-  
+
   /** get the top ten customers with most reservations */
   static async topTen() {
     const results = await db.query(
@@ -85,8 +94,8 @@ class Customer {
             GROUP BY c.id
             ORDER BY COUNT(*) DESC
             LIMIT 10`
-    )
-    return results.rows.map(c => new Customer(c));
+    );
+    return results.rows.map((c) => new Customer(c));
   }
 
   /** get a customer by ID. */
@@ -145,7 +154,7 @@ class Customer {
   }
 
   /**Gets first name and last name for full name. */
-  fullName() {
+  get fullName() {
     return `${this.firstName} ${this.lastName}`;
   }
 }
